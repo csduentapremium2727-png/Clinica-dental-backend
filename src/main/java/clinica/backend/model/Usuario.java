@@ -19,9 +19,8 @@ public class Usuario {
     @Column(name = "documento_identidad", unique = true, nullable = false, length = 20)
     private String documentoIdentidad;
     
-    // --- CAMPO AÑADIDO ---
-    @Column(name = "password", nullable = false, length = 60) // 60 chars para el hash de BCrypt
-    private String password;
+    @Column(name = "contrasena_hash", nullable = false, length = 60) // Mapea a tu columna existente
+    private String password; // El campo en Java se sigue llamando 'password'
     
     @ManyToOne(fetch = FetchType.EAGER) 
     @JoinColumn(name = "rol_id", referencedColumnName = "id", nullable = false)
