@@ -2,7 +2,8 @@ package clinica.backend.repository;
 
 import clinica.backend.model.Odontologo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
 
 public interface OdontologoRepository extends JpaRepository<Odontologo, Long> {
-    // Aquí puedes añadir métodos de búsqueda personalizados si los necesitas
+    Optional<Odontologo> findByEmail(String email);
 }

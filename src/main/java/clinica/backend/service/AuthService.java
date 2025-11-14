@@ -3,7 +3,9 @@ package clinica.backend.service;
 import clinica.backend.config.JwtUtil;
 import clinica.backend.dto.AuthResponseDTO;
 import clinica.backend.dto.LoginRequestDTO;
+import clinica.backend.dto.RegistroOdontologoDTO;
 import clinica.backend.dto.RegistroPacienteDTO;
+import clinica.backend.model.Odontologo;
 import clinica.backend.model.Paciente;
 import clinica.backend.model.Rol;
 import clinica.backend.model.Usuario;
@@ -19,6 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import clinica.backend.repository.OdontologoRepository;
 
 @Service
 public class AuthService {
@@ -28,6 +31,8 @@ public class AuthService {
 
     @Autowired
     private PacienteRepository pacienteRepository;
+    @Autowired
+    private OdontologoRepository odontologoRepository;
 
     @Autowired
     private RolRepository rolRepository;
@@ -83,6 +88,34 @@ public class AuthService {
         return pacienteRepository.save(nuevoPaciente);
     }
 
+    @Transactional
+    public Odontologo registrarOdontologo(RegistroOdontologoDTO dto) {
+        if (usuarioRepository.findByDocumentoIdentidad(dto.getDocumentoIdentidad()).isPresent()) {
+            throw new RuntimeException("El documento de identidad ya está registrado.");
+        }
+        if (odontologoRepository.findByEmail(dto.getEmail()).isPresent()) {
+             throw new RuntimeException("El email ya está registrado.");
+        }
+
+        Rol odontologoRol = rolRepository.findByNombreRol("ROL_ODONTOLOGO")
+                .orElseThrow(() -> new RuntimeException("Error: ROL_ODONTOLOGO no encontrado."));
+
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setDocumentoIdentidad(dto.getDocumentoIdentidad());
+        nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        nuevoUsuario.setRol(odontologoRol);
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+
+        Odontologo nuevoOdontologo = new Odontologo();
+        nuevoOdontologo.setUsuario(usuarioGuardado);
+        nuevoOdontologo.setNombre(dto.getNombre());
+        nuevoOdontologo.setApellido(dto.getApellido());
+        nuevoOdontologo.setEmail(dto.getEmail());
+        nuevoOdontologo.setTelefono(dto.getTelefono());
+        nuevoOdontologo.setEspecialidad(dto.getEspecialidad());
+
+        return odontologoRepository.save(nuevoOdontologo);
+    }
     // Lógica para el Login
     public AuthResponseDTO login(LoginRequestDTO dto) {
         // 1. Autenticar al usuario
