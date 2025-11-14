@@ -23,23 +23,27 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // 1. Crear Roles si no existen
-        if (rolRepository.findByNombreRol("ROL_PACIENTE").isEmpty()) {
-            rolRepository.save(new Rol(null, "ROL_PACIENTE"));
+        
+        // --- INICIO DE CORRECCIÓN ---
+        
+        // 1. Crear Roles si no existen (con los nombres correctos)
+        if (rolRepository.findByNombreRol("PACIENTE").isEmpty()) {
+            rolRepository.save(new Rol(null, "PACIENTE"));
         }
-        if (rolRepository.findByNombreRol("ROL_ADMIN").isEmpty()) {
-            rolRepository.save(new Rol(null, "ROL_ADMIN"));
+        if (rolRepository.findByNombreRol("ADMIN").isEmpty()) {
+            rolRepository.save(new Rol(null, "ADMIN"));
         }
-        if (rolRepository.findByNombreRol("ROL_ODONTOLOGO").isEmpty()) {
-            rolRepository.save(new Rol(null, "ROL_ODONTOLOGO"));
+        if (rolRepository.findByNombreRol("ODONTOLOGO").isEmpty()) {
+            rolRepository.save(new Rol(null, "ODONTOLOGO"));
         }
-         if (rolRepository.findByNombreRol("ROL_RECEPCIONISTA").isEmpty()) {
-            rolRepository.save(new Rol(null, "ROL_RECEPCIONISTA"));
+         if (rolRepository.findByNombreRol("RECEPCIONISTA").isEmpty()) {
+            rolRepository.save(new Rol(null, "RECEPCIONISTA"));
         }
 
         // 2. Crear usuario Admin si no existe
         if (usuarioRepository.findByDocumentoIdentidad("admin").isEmpty()) {
-            Rol adminRol = rolRepository.findByNombreRol("ROL_ADMIN")
+            // Buscamos por el nombre corregido "ADMIN"
+            Rol adminRol = rolRepository.findByNombreRol("ADMIN")
                     .orElseThrow(() -> new RuntimeException("Error: ROL_ADMIN no encontrado."));
             
             Usuario adminUser = new Usuario();
@@ -49,5 +53,7 @@ public class DataSeeder implements CommandLineRunner {
             
             usuarioRepository.save(adminUser);
         }
+        
+        // --- FIN DE CORRECCIÓN ---
     }
 }

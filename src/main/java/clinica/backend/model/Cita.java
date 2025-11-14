@@ -1,5 +1,7 @@
 package clinica.backend.model;
 
+// 1. IMPORTA ESTO
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,10 +22,14 @@ public class Cita {
 
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "paciente_id", referencedColumnName = "id", nullable = false)
+    // 2. AÑADE ESTA LÍNEA
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) 
     private Paciente paciente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "odontologo_id", referencedColumnName = "id", nullable = false)
+    // 3. AÑADE ESTA LÍNEA
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Odontologo odontologo;
 
     @Column(name = "fecha_cita", nullable = false)

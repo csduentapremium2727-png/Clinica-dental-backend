@@ -16,7 +16,7 @@ public class Odontologo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.PERSIST) // ¡ESTE ES EL CAMBIO!
     @JoinColumn(name = "usuario_id", referencedColumnName = "id", unique = true)
     private Usuario usuario;
 

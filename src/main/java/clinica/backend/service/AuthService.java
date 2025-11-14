@@ -97,24 +97,31 @@ public class AuthService {
              throw new RuntimeException("El email ya está registrado.");
         }
 
-        Rol odontologoRol = rolRepository.findByNombreRol("ROL_ODONTOLOGO")
+        Rol odontologoRol = rolRepository.findByNombreRol("ODONTOLOGO")
                 .orElseThrow(() -> new RuntimeException("Error: ROL_ODONTOLOGO no encontrado."));
 
+        // --- INICIO DE LA CORRECCIÓN ---
+        
+        // 1. CREA Y GUARDA EL USUARIO PRIMERO
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setDocumentoIdentidad(dto.getDocumentoIdentidad());
         nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         nuevoUsuario.setRol(odontologoRol);
-        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario); // ¡Guardado!
 
+        // 2. CREA EL ODONTÓLOGO Y ASIGNA EL USUARIO YA GUARDADO
         Odontologo nuevoOdontologo = new Odontologo();
-        nuevoOdontologo.setUsuario(usuarioGuardado);
+        nuevoOdontologo.setUsuario(usuarioGuardado); // Asigna la entidad completa
         nuevoOdontologo.setNombre(dto.getNombre());
         nuevoOdontologo.setApellido(dto.getApellido());
         nuevoOdontologo.setEmail(dto.getEmail());
         nuevoOdontologo.setTelefono(dto.getTelefono());
         nuevoOdontologo.setEspecialidad(dto.getEspecialidad());
 
+        // 3. GUARDA EL ODONTÓLOGO (Hibernate ya no intentará crear el usuario)
         return odontologoRepository.save(nuevoOdontologo);
+        
+        // --- FIN DE LA CORRECCIÓN ---
     }
     // Lógica para el Login
     public AuthResponseDTO login(LoginRequestDTO dto) {

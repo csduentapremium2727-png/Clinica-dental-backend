@@ -6,4 +6,4 @@ services:
       - 'POSTGRES_PASSWORD=yrVkdRxr7U9kWjcxfWwJ9g9ztMWxdBKL'
       - 'POSTGRES_USER=clinic_user'
     ports:
-      - '8091'
+      - '8080'
