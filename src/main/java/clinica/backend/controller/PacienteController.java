@@ -10,48 +10,49 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/pacientes") // Ruta base para todos los endpoints de pacientes
-@CrossOrigin // Permite peticiones desde Angular (localhost:4200)
+@RequestMapping("/api/pacientes")
+@CrossOrigin // Permite peticiones desde Angular
 public class PacienteController {
 
     @Autowired
     private PacienteService pacienteService;
 
-    // GET /api/pacientes (Listar todos)
     @GetMapping
     public List<Paciente> listarPacientes() {
-        // Sin lógica, solo llama al servicio
         return pacienteService.listarPacientes();
     }
 
-    // GET /api/pacientes/{id} (Obtener uno)
     @GetMapping("/{id}")
     public ResponseEntity<Paciente> obtenerPaciente(@PathVariable Long id) {
         return pacienteService.obtenerPaciente(id)
-                .map(paciente -> ResponseEntity.ok(paciente)) // 200 OK
-                .orElse(ResponseEntity.notFound().build()); // 404 Not Found
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST /api/pacientes (Crear uno)
     @PostMapping
     public ResponseEntity<Paciente> guardarPaciente(@RequestBody Paciente paciente) {
+        // Forzamos ID nulo para asegurar que se crea uno nuevo
+        paciente.setId(null);
         Paciente pacienteGuardado = pacienteService.guardarPaciente(paciente);
-        return new ResponseEntity<>(pacienteGuardado, HttpStatus.CREATED); // 201 Created
+        return new ResponseEntity<>(pacienteGuardado, HttpStatus.CREATED);
     }
 
-    // PUT /api/pacientes/{id} (Actualizar uno)
     @PutMapping("/{id}")
     public ResponseEntity<Paciente> actualizarPaciente(@PathVariable Long id, @RequestBody Paciente paciente) {
-        // Aseguramos que el ID del path coincida con el del body
+        // CORRECCIÓN: Aseguramos que el objeto tenga el ID de la URL
         paciente.setId(id); 
-        Paciente pacienteActualizado = pacienteService.actualizarPaciente(paciente);
-        return ResponseEntity.ok(pacienteActualizado); // 200 OK
+        try {
+            Paciente pacienteActualizado = pacienteService.actualizarPaciente(paciente);
+            return ResponseEntity.ok(pacienteActualizado);
+        } catch (RuntimeException e) {
+            // Manejo básico de error si no existe
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // DELETE /api/pacientes/{id} (Eliminar uno)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarPaciente(@PathVariable Long id) {
         pacienteService.eliminarPaciente(id);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }

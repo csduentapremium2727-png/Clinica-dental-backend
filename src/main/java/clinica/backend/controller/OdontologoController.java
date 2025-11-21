@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/odontologos")
-@CrossOrigin
+@CrossOrigin // Permite peticiones desde Angular
 public class OdontologoController {
 
     @Autowired
@@ -34,6 +34,8 @@ public class OdontologoController {
     // POST /api/odontologos
     @PostMapping
     public ResponseEntity<Odontologo> guardarOdontologo(@RequestBody Odontologo odontologo) {
+        // Forzamos ID nulo para crear nuevo
+        odontologo.setId(null); // Asegúrate que tu modelo tenga setId (Lombok o manual)
         Odontologo odontologoGuardado = odontologoService.guardarOdontologo(odontologo);
         return new ResponseEntity<>(odontologoGuardado, HttpStatus.CREATED);
     }
@@ -41,7 +43,12 @@ public class OdontologoController {
     // PUT /api/odontologos/{id}
     @PutMapping("/{id}")
     public ResponseEntity<Odontologo> actualizarOdontologo(@PathVariable Long id, @RequestBody Odontologo odontologo) {
-        odontologo.setId(id);
+        // Verificamos si existe antes de actualizar
+        if (odontologoService.obtenerOdontologo(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        odontologo.setId(id); // Forzamos el ID de la URL
         Odontologo odontologoActualizado = odontologoService.actualizarOdontologo(odontologo);
         return ResponseEntity.ok(odontologoActualizado);
     }
@@ -49,6 +56,9 @@ public class OdontologoController {
     // DELETE /api/odontologos/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarOdontologo(@PathVariable Long id) {
+        if (odontologoService.obtenerOdontologo(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         odontologoService.eliminarOdontologo(id);
         return ResponseEntity.noContent().build();
     }
