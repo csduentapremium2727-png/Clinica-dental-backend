@@ -1,95 +1,69 @@
 package clinica.backend.controller;
 
-import clinica.backend.model.Cita;
 import clinica.backend.model.Facturacion;
-import clinica.backend.repository.CitaRepository;
-import clinica.backend.repository.FacturacionRepository;
+import clinica.backend.service.FacturacionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/facturas")
-@CrossOrigin
+@CrossOrigin // Importante para que Angular pueda acceder sin problemas de CORS local
 public class FacturaController {
 
     @Autowired
-    private FacturacionRepository facturaRepository;
-    
-    @Autowired
-    private CitaRepository citaRepository;
+    private FacturacionService facturacionService;
 
     @GetMapping
     public List<Facturacion> listarFacturas() {
-        return facturaRepository.findAll();
+        return facturacionService.listarFacturas();
     }
 
     @GetMapping("/pendientes/paciente/{pacienteId}")
     public ResponseEntity<List<Facturacion>> listarFacturasPendientes(@PathVariable Long pacienteId) {
-        return ResponseEntity.ok(facturaRepository.findByPacienteIdAndEstadoPago(pacienteId, "Pendiente")); 
+        return ResponseEntity.ok(facturacionService.listarFacturasPendientesPorPaciente(pacienteId));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Facturacion> obtenerFactura(@PathVariable Long id) {
+        return facturacionService.obtenerFactura(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<?> crearFactura(@RequestBody Map<String, Object> datos) {
-        System.out.println(">>> Recibiendo datos para factura: " + datos); // LOG PARA DEBUG
-
         try {
-            // 1. Validar ID de Cita
-            if (datos.get("citaId") == null) {
-                return ResponseEntity.badRequest().body("El campo 'citaId' es obligatorio y llegó nulo.");
-            }
-            
-            // Convertir de forma segura (maneja String o Number del JSON)
-            String citaIdStr = String.valueOf(datos.get("citaId"));
-            Long citaId;
-            try {
-                 citaId = Long.valueOf(citaIdStr);
-            } catch (NumberFormatException e) {
-                return ResponseEntity.badRequest().body("El 'citaId' debe ser un número válido. Recibido: " + citaIdStr);
-            }
-
-            // 2. Buscar la Cita
-            Cita cita = citaRepository.findById(citaId)
-                .orElseThrow(() -> new RuntimeException("No se encontró ninguna Cita con el ID: " + citaId));
-
-            // 3. Validar Monto
-            if (datos.get("montoTotal") == null) {
-                return ResponseEntity.badRequest().body("El campo 'montoTotal' es obligatorio.");
-            }
-            BigDecimal monto = new BigDecimal(String.valueOf(datos.get("montoTotal")));
-
-            // 4. Crear Factura
-            Facturacion nuevaFactura = new Facturacion();
-            nuevaFactura.setCita(cita);
-            nuevaFactura.setPaciente(cita.getPaciente());
-            nuevaFactura.setMontoTotal(monto);
-            
-            // Manejo seguro de strings
-            String estado = datos.get("estadoPago") != null ? datos.get("estadoPago").toString() : "Pendiente";
-            String tipo = datos.get("tipoComprobante") != null ? datos.get("tipoComprobante").toString() : "Boleta";
-            
-            nuevaFactura.setEstadoPago(estado);
-            nuevaFactura.setTipoComprobante(tipo);
-
-            Facturacion facturaGuardada = facturaRepository.save(nuevaFactura);
-            
-            System.out.println(">>> Factura creada con ID: " + facturaGuardada.getId());
+            // Delegamos toda la lógica al servicio
+            Facturacion facturaGuardada = facturacionService.crearFacturaDesdeDatos(datos);
             return new ResponseEntity<>(facturaGuardada, HttpStatus.CREATED);
+
+        } catch (IllegalArgumentException e) {
+            // Errores de validación (datos faltantes o mal formados) -> 400 Bad Request
+            return ResponseEntity.badRequest().body(e.getMessage());
             
         } catch (RuntimeException e) {
-            // Error de lógica (ej: cita no encontrada) -> 400 o 404
-            System.err.println("Error lógico creando factura: " + e.getMessage());
+            // Errores de negocio (ej. cita no encontrada) -> 400 Bad Request
             return ResponseEntity.badRequest().body(e.getMessage());
+            
         } catch (Exception e) {
-            // Error inesperado -> 500
+            // Errores inesperados -> 500 Internal Server Error
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error interno del servidor: " + e.getMessage());
+                    .body("Error interno del servidor: " + e.getMessage());
         }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarFactura(@PathVariable Long id) {
+        if (!facturacionService.existeFactura(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        facturacionService.eliminarFactura(id);
+        return ResponseEntity.noContent().build();
     }
 }
