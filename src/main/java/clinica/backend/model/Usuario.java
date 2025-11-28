@@ -19,9 +19,23 @@ public class Usuario {
     @Column(name = "documento_identidad", unique = true, nullable = false, length = 20)
     private String documentoIdentidad;
     
-    @Column(name = "contrasena_hash", nullable = false, length = 60) // Mapea a tu columna existente
-    private String password; // El campo en Java se sigue llamando 'password'
+    @Column(name = "contrasena_hash", nullable = false, length = 60)
+    private String password;
     
+    // --- NUEVOS CAMPOS PARA GESTIÓN DE USUARIOS ---
+    @Column(length = 100)
+    private String nombre;
+
+    @Column(length = 100)
+    private String apellido;
+
+    @Column(length = 100)
+    private String email;
+
+    @Column(length = 20)
+    private String telefono;
+    // -----------------------------------------------
+
     @ManyToOne(fetch = FetchType.EAGER) 
     @JoinColumn(name = "rol_id", referencedColumnName = "id", nullable = false)
     private Rol rol;

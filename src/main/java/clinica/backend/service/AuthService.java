@@ -22,20 +22,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-// Imports para el Logger
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
 public class AuthService {
 
-    // --- INICIO DE MODIFICACIÓN ---
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     @Autowired
-    private EmailService emailService; // 1. INYECTA EL SERVICIO DE CORREO
-    // --- FIN DE MODIFICACIÓN ---
+    private EmailService emailService;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -67,9 +63,6 @@ public class AuthService {
         if (usuarioRepository.findByDocumentoIdentidad(dto.getDocumentoIdentidad()).isPresent()) {
             throw new RuntimeException("El documento de identidad ya está registrado.");
         }
-        if (pacienteRepository.findByEmail(dto.getEmail()).isPresent()) {
-             throw new RuntimeException("El email ya está registrado.");
-        }
 
         Rol rolPaciente = rolRepository.findByNombreRol("PACIENTE")
                 .orElseThrow(() -> new RuntimeException("Error: Rol PACIENTE no encontrado."));
@@ -78,6 +71,13 @@ public class AuthService {
         nuevoUsuario.setDocumentoIdentidad(dto.getDocumentoIdentidad());
         nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         nuevoUsuario.setRol(rolPaciente);
+        
+        // GUARDAMOS TAMBIÉN LOS DATOS BÁSICOS EN USUARIO
+        nuevoUsuario.setNombre(dto.getNombre());
+        nuevoUsuario.setApellido(dto.getApellido());
+        nuevoUsuario.setEmail(dto.getEmail());
+        nuevoUsuario.setTelefono(dto.getTelefono());
+        
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
         Paciente nuevoPaciente = new Paciente();
@@ -93,38 +93,25 @@ public class AuthService {
         
         Paciente pacienteGuardado = pacienteRepository.save(nuevoPaciente);
 
-        // --- INICIO DE MODIFICACIÓN ---
-        // 2. LLAMA AL SERVICIO DE CORREO
         try {
             String subject = "¡Bienvenido a la Clínica Sonrisa Plena!";
-            String content = "<h1>Hola, " + dto.getNombre() + "!</h1>"
-                           + "<p>Tu registro ha sido exitoso. Tu usuario es: <b>" + dto.getDocumentoIdentidad() + "</b></p>"
-                           + "<p>Gracias por confiar en nosotros.</p>";
+            String content = "<h1>Hola, " + dto.getNombre() + "!</h1><p>Registro exitoso.</p>";
             emailService.sendHtmlEmail(dto.getEmail(), subject, content);
         } catch (Exception e) {
-            // Si el correo falla, solo lo registramos en el log pero no detenemos la operación
-            logger.warn("El usuario " + dto.getDocumentoIdentidad() + " se registró, pero el email de bienvenida falló: " + e.getMessage());
+            logger.warn("Email falló: " + e.getMessage());
         }
-        // --- FIN DE MODIFICACIÓN ---
 
         return pacienteGuardado;
     }
     
     public AuthResponseDTO login(LoginRequestDTO dto) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        dto.getDocumentoIdentidad(),
-                        dto.getPassword()
-                )
+                new UsernamePasswordAuthenticationToken(dto.getDocumentoIdentidad(), dto.getPassword())
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        final UserDetails userDetails = usuarioSecurityService
-                .loadUserByUsername(dto.getDocumentoIdentidad());
-        
+        final UserDetails userDetails = usuarioSecurityService.loadUserByUsername(dto.getDocumentoIdentidad());
         final String jwt = jwtUtil.generateToken(userDetails);
-        
         String rol = jwtUtil.extractRol(jwt);
         return new AuthResponseDTO(jwt, rol);
     }
@@ -132,10 +119,7 @@ public class AuthService {
     @Transactional
     public Odontologo registrarOdontologo(RegistroOdontologoDTO dto) {
         if (usuarioRepository.findByDocumentoIdentidad(dto.getDocumentoIdentidad()).isPresent()) {
-            throw new RuntimeException("El documento de identidad ya está registrado.");
-        }
-        if (odontologoRepository.findByEmail(dto.getEmail()).isPresent()) {
-             throw new RuntimeException("El email ya está registrado.");
+            throw new RuntimeException("Documento ya registrado.");
         }
 
         Rol odontologoRol = rolRepository.findByNombreRol("ODONTOLOGO")
@@ -145,6 +129,13 @@ public class AuthService {
         nuevoUsuario.setDocumentoIdentidad(dto.getDocumentoIdentidad());
         nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         nuevoUsuario.setRol(odontologoRol);
+        
+        // GUARDAMOS DATOS EN USUARIO
+        nuevoUsuario.setNombre(dto.getNombre());
+        nuevoUsuario.setApellido(dto.getApellido());
+        nuevoUsuario.setEmail(dto.getEmail());
+        nuevoUsuario.setTelefono(dto.getTelefono());
+        
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
         Odontologo nuevoOdontologo = new Odontologo();

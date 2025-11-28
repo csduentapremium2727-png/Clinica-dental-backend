@@ -24,8 +24,6 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         
-        // --- INICIO DE CORRECCIÓN ---
-        
         // 1. Crear Roles si no existen (con los nombres correctos)
         if (rolRepository.findByNombreRol("PACIENTE").isEmpty()) {
             rolRepository.save(new Rol(null, "PACIENTE"));
@@ -51,9 +49,14 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setPassword(passwordEncoder.encode("admin")); // password: "admin"
             adminUser.setRol(adminRol);
             
+            // --- CORRECCIÓN: AGREGAR DATOS PERSONALES ---
+            // Estos datos son necesarios para que la tabla del frontend no salga vacía
+            adminUser.setNombre("Administrador");
+            adminUser.setApellido("Sistema");
+            adminUser.setEmail("admin@clinica.com");
+            adminUser.setTelefono("999999999");
+            
             usuarioRepository.save(adminUser);
         }
-        
-        // --- FIN DE CORRECCIÓN ---
     }
 }

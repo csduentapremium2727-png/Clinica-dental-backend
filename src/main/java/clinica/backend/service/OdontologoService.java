@@ -29,61 +29,74 @@ public class OdontologoService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // Listar todos
     public List<Odontologo> listarOdontologos() {
         return odontologoRepository.findAll();
     }
 
-    // Obtener uno por ID (¡Este era el que faltaba!)
     public Optional<Odontologo> obtenerOdontologo(Long id) {
         return odontologoRepository.findById(id);
     }
 
-    // Guardar con creación automática de Usuario
     @Transactional
     public Odontologo guardarOdontologo(Odontologo odontologo) {
+        // Si no tiene usuario asignado (es nuevo registro desde panel), lo creamos
         if (odontologo.getUsuario() == null) {
             Usuario nuevoUsuario = new Usuario();
             
-            // Usamos el teléfono como login (fallback a ID temporal si no hay)
+            // Generamos un usuario/login basado en el documento/teléfono o un default
             String documentoLogin = odontologo.getTelefono(); 
             if (documentoLogin == null || documentoLogin.isEmpty()) {
-                documentoLogin = "DOC" + System.currentTimeMillis(); 
+                // Fallback si no hay teléfono
+                documentoLogin = "DOC-" + System.currentTimeMillis(); 
             }
-            // Cortar a 20 chars para evitar error de BD
-            if (documentoLogin.length() > 20) {
-                documentoLogin = documentoLogin.substring(0, 20);
-            }
+            // Seguridad: limitamos largo
+            if (documentoLogin.length() > 20) documentoLogin = documentoLogin.substring(0, 20);
 
             nuevoUsuario.setDocumentoIdentidad(documentoLogin);
-            nuevoUsuario.setPassword(passwordEncoder.encode("123456")); // Pass default
+            nuevoUsuario.setPassword(passwordEncoder.encode("123456")); // Password por defecto
+
+            // --- CORRECCIÓN IMPORTANTE: COPIAR DATOS AL USUARIO ---
+            // Esto es lo que faltaba para que se vea en la tabla de Usuarios
+            nuevoUsuario.setNombre(odontologo.getNombre());
+            nuevoUsuario.setApellido(odontologo.getApellido());
+            nuevoUsuario.setEmail(odontologo.getEmail());
+            nuevoUsuario.setTelefono(odontologo.getTelefono());
+            // -----------------------------------------------------
 
             // Asignar Rol
             Rol rolOdontologo = rolRepository.findByNombreRol("ODONTOLOGO")
                     .orElseGet(() -> rolRepository.save(new Rol(null, "ODONTOLOGO")));
             nuevoUsuario.setRol(rolOdontologo);
 
-            // Guardar Usuario y asignarlo
+            // Guardar Usuario
             nuevoUsuario = usuarioRepository.save(nuevoUsuario);
             odontologo.setUsuario(nuevoUsuario);
+        } 
+        // Caso: Edición donde el usuario ya existe, actualizamos sus datos también
+        else if (odontologo.getUsuario() != null) {
+            Usuario u = odontologo.getUsuario();
+            u.setNombre(odontologo.getNombre());
+            u.setApellido(odontologo.getApellido());
+            u.setEmail(odontologo.getEmail());
+            u.setTelefono(odontologo.getTelefono());
+            // No guardamos u explícitamente porque CascadeType.PERSIST/MERGE lo manejaría, 
+            // o Hibernate dirty checking, pero para asegurar:
+            usuarioRepository.save(u);
         }
+        
         return odontologoRepository.save(odontologo);
     }
 
-    // Actualizar
     public Odontologo actualizarOdontologo(Odontologo odontologo) {
-        // Verifica si existe, si no, podrías lanzar excepción, 
-        // pero save() también funciona como "upsert" si el ID viene cargado.
-        return odontologoRepository.save(odontologo);
+        // Reutilizamos la lógica de guardar que ahora incluye la sincronización de datos
+        return guardarOdontologo(odontologo);
     }
 
-    // Eliminar (con limpieza opcional de usuario)
     @Transactional
     public void eliminarOdontologo(Long id) {
         odontologoRepository.findById(id).ifPresent(o -> {
             Usuario u = o.getUsuario();
             odontologoRepository.deleteById(id);
-            // Opcional: Borrar el usuario asociado para no dejar basura
             if (u != null) {
                 usuarioRepository.delete(u);
             }
