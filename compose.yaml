@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=clinicadental_w71y'
+      - 'POSTGRES_PASSWORD=yrVkdRxr7U9kWjcxfWwJ9g9ztMWxdBKL'
+      - 'POSTGRES_USER=clinic_user'
+    ports:
+      - '8080'
