@@ -55,7 +55,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Permitir el origen específico de tu frontend Angular
-        configuration.setAllowedOrigins(List.of("http://localhost:4200, https://frontend-dental-1dy9.vercel.app/")); 
+        configuration.setAllowedOrigins(List.of("http://localhost:4200", "https://frontend-dental-1dy9.vercel.app"));
         
         // Métodos permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
