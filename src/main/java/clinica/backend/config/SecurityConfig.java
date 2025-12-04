@@ -53,15 +53,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // CAMBIO IMPORTANTE: Usar setAllowedOriginPatterns en lugar de setAllowedOrigins
-        // Esto permite usar "*" como comodín para aceptar cualquier subdominio de vercel.app
-        configuration.setAllowedOriginPatterns(List.of(
+        // Usamos setAllowedOrigins explícito (más seguro y compatible que Patterns en algunos navegadores)
+        configuration.setAllowedOrigins(List.of(
             "http://localhost:4200", 
-            "https://dental-frontend-plum.vercel.app" 
+            "https://dental-frontend-plum.vercel.app"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Access-Control-Allow-Origin", "X-Requested-With", "Accept", "Origin"));
+        configuration.setAllowedHeaders(Arrays.asList("*")); // Permitir todos los headers
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
@@ -69,7 +68,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
     // Filtros de Seguridad
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
