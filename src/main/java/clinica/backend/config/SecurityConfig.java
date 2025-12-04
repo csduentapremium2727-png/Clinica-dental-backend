@@ -57,7 +57,7 @@ public class SecurityConfig {
         // Esto permite usar "*" como comodín para aceptar cualquier subdominio de vercel.app
         configuration.setAllowedOriginPatterns(List.of(
             "http://localhost:4200", 
-            "https://*.vercel.app" 
+            "https://dental-frontend-plum.vercel.app" 
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
