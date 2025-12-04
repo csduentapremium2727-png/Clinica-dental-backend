@@ -49,26 +49,17 @@ public class SecurityConfig {
         return authBuilder.build();
     }
 
-    // Configuración CORS Global (Robustez para desarrollo)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // SOLUCIÓN 1 (Específica): Añadir la URL exacta que falló
-        // configuration.setAllowedOrigins(List.of(
-        //    "http://localhost:4200", 
-        //    "https://frontend-dental-1dy9.vercel.app",
-        //    "https://frontend-dental-1dy9-4cj0btz9k-matheuz111s-projects.vercel.app" // <--- NUEVA
-        // ));
-
-        // SOLUCIÓN 2 (Recomendada): Usar patrones para permitir cualquier subdominio de Vercel
-        // Esto es mejor porque Vercel genera URLs nuevas para cada despliegue.
+        // CAMBIO IMPORTANTE: Usar setAllowedOriginPatterns en lugar de setAllowedOrigins
+        // Esto permite usar "*" como comodín para aceptar cualquier subdominio de vercel.app
         configuration.setAllowedOriginPatterns(List.of(
             "http://localhost:4200", 
-            "https://*.vercel.app" // <--- Acepta cualquier subdominio de Vercel
+            "https://*.vercel.app" 
         ));
         
-        // Resto de tu configuración igual...
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Access-Control-Allow-Origin", "X-Requested-With", "Accept", "Origin"));
         configuration.setExposedHeaders(List.of("Authorization"));
