@@ -22,6 +22,17 @@ public class PacienteController {
         return pacienteService.listarPacientes();
     }
 
+    // ************ CORRECCIÓN CLAVE: Resuelve el conflicto de rutas ************
+    // Mapea a: GET /api/pacientes?documentoIdentidad=...
+    @GetMapping(params = "documentoIdentidad")
+    public ResponseEntity<Paciente> buscarPorDni(@RequestParam String documentoIdentidad) {
+        // Llama al nuevo método del servicio
+        return pacienteService.buscarPacientePorDocumento(documentoIdentidad) 
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    // **************************************************************************
+
     @GetMapping("/{id}")
     public ResponseEntity<Paciente> obtenerPaciente(@PathVariable Long id) {
         return pacienteService.obtenerPaciente(id)
@@ -39,7 +50,7 @@ public class PacienteController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Paciente> actualizarPaciente(@PathVariable Long id, @RequestBody Paciente paciente) {
-        // CORRECCIÓN: Aseguramos que el objeto tenga el ID de la URL
+        // Aseguramos que el objeto tenga el ID de la URL
         paciente.setId(id); 
         try {
             Paciente pacienteActualizado = pacienteService.actualizarPaciente(paciente);

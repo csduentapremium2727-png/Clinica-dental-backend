@@ -23,6 +23,13 @@ public class PacienteService {
     public Optional<Paciente> obtenerPaciente(Long id) {
         return pacienteRepository.findById(id);
     }
+    
+    // ************ NUEVO MÉTODO AÑADIDO ************
+    // Método para buscar un paciente por el Documento de Identidad
+    public Optional<Paciente> buscarPacientePorDocumento(String documentoIdentidad) {
+        return pacienteRepository.findByUsuarioDocumentoIdentidad(documentoIdentidad);
+    }
+    // **********************************************
 
     // Crear un nuevo paciente
     // Nota: Más adelante, aquí recibiremos un DTO y también crearemos el Usuario.
@@ -48,5 +55,5 @@ public class PacienteService {
 
     public Optional<Paciente> buscarPorUsuarioId(Long usuarioId) {
         return pacienteRepository.findByUsuarioId(usuarioId);
-    }    
+    }
 }
