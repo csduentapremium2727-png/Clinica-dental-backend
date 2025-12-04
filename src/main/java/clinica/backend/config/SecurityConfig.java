@@ -54,19 +54,24 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Permitir el origen específico de tu frontend Angular
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "https://frontend-dental-1dy9.vercel.app"));
-        
-        // Métodos permitidos
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
-        
-        // Cabeceras permitidas (incluyendo Authorization y Content-Type)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Access-Control-Allow-Origin", "X-Requested-With", "Accept", "Origin"));
-        
-        // Exponer cabeceras si fuera necesario (opcional pero útil)
-        configuration.setExposedHeaders(List.of("Authorization"));
+        // SOLUCIÓN 1 (Específica): Añadir la URL exacta que falló
+        // configuration.setAllowedOrigins(List.of(
+        //    "http://localhost:4200", 
+        //    "https://frontend-dental-1dy9.vercel.app",
+        //    "https://frontend-dental-1dy9-4cj0btz9k-matheuz111s-projects.vercel.app" // <--- NUEVA
+        // ));
 
-        // Permitir credenciales (cookies, headers de autenticación)
+        // SOLUCIÓN 2 (Recomendada): Usar patrones para permitir cualquier subdominio de Vercel
+        // Esto es mejor porque Vercel genera URLs nuevas para cada despliegue.
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:4200", 
+            "https://*.vercel.app" // <--- Acepta cualquier subdominio de Vercel
+        ));
+        
+        // Resto de tu configuración igual...
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Access-Control-Allow-Origin", "X-Requested-With", "Accept", "Origin"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
